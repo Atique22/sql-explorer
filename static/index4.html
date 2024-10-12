@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Insert Data</title>
+</head>
+<body>
+    <h1>Insert Server</h1>
+    <form id="server-form">
+        <input type="text" name="server_name" placeholder="Server Name" required>
+        <button type="submit">Add Server</button>
+    </form>
+
+    <h1>Insert Database</h1>
+    <form id="database-form">
+        <input type="text" name="database_name" placeholder="Database Name" required>
+        <input type="number" name="server_id" placeholder="Server ID" required>
+        <button type="submit">Add Database</button>
+    </form>
+
+    <script>
+        document.getElementById('server-form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const serverName = event.target.server_name.value;
+
+            const response = await fetch('/add_server', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: serverName })
+            });
+
+            const result = await response.json();
+            alert(result.message);
+            event.target.reset();
+        });
+
+        document.getElementById('database-form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const databaseName = event.target.database_name.value;
+            const serverId = event.target.server_id.value;
+
+            const response = await fetch('/add_database', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: databaseName, server_id: serverId })
+            });
+
+            const result = await response.json();
+            alert(result.message);
+            event.target.reset();
+        });
+    </script>
+</body>
+</html>

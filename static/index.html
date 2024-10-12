@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Table and Dependencies</title>
+</head>
+<body>
+    <h1>Add New Table</h1>
+    <form id="table-form">
+        <select name="server_id" id="server-select" required>
+            <option value="">Select Server</option>
+            <!-- Options will be populated by JavaScript -->
+        </select>
+        <select name="database_id" id="database-select" required>
+            <option value="">Select Database</option>
+            <!-- Options will be populated by JavaScript -->
+        </select>
+        <input type="text" name="table_name" placeholder="Table Name" required>
+        <button type="submit">Add Table</button>
+    </form>
+
+    <h1>Add Dependency</h1>
+    <form id="dependency-form">
+        <select name="source_table_id" id="source-table-select" required>
+            <option value="">Select Source Table</option>
+            <!-- Options will be populated by JavaScript -->
+        </select>
+        <select name="target_table_id" id="target-table-select" required>
+            <option value="">Select Target Table</option>
+            <!-- Options will be populated by JavaScript -->
+        </select>
+        <button type="submit">Add Dependency</button>
+    </form>
+
+    <script>
+        // Fetch servers and populate server select
+        async function loadServers() {
+            try {
+                const response = await fetch('/sqlite/get_servers');
+                if (!response.ok) throw new Error('Failed to fetch servers');
+                const servers = await response.json();
+                const serverSelect = document.getElementById('server-select');
+                servers.forEach(server => {
+                    const option = document.createElement('option');
+                    option.value = server.id;
+                    option.textContent = server.name;
+                    serverSelect.appendChild(option);
+                });
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+
+        // Fetch databases based on selected server and populate database select
+        document.getElementById('server-select').addEventListener('change', async (event) => {
+            const serverId = event.target.value;
+            const response = await fetch(`/sqlite/get_databases/${serverId}`);
+            if (!response.ok) {
+                alert('Failed to fetch databases');
+                return;
+            }
+            const databases = await response.json();
+            const databaseSelect = document.getElementById('database-select');
+            databaseSelect.innerHTML = '<option value="">Select Database</option>'; // Reset options
+
+            databases.forEach(database => {
+                const option = document.createElement('option');
+                option.value = database.id;
+                option.textContent = database.name;
+                databaseSelect.appendChild(option);
+            });
+        });
+
+        // Fetch tables for dependencies when a database is selected
+        document.getElementById('database-select').addEventListener('change', async (event) => {
+            const databaseId = event.target.value;
+            const response = await fetch(`/sqlite/get_tables/${databaseId}`);
+            if (!response.ok) {
+                alert('Failed to fetch tables');
+                return;
+            }
+            const tables = await response.json();
+
+            // Populate both source and target table selects
+            const sourceTableSelect = document.getElementById('source-table-select');
+            const targetTableSelect = document.getElementById('target-table-select');
+
+            sourceTableSelect.innerHTML = '<option value="">Select Source Table</option>';
+            targetTableSelect.innerHTML = '<option value="">Select Target Table</option>';
+
+            tables.forEach(table => {
+                const sourceOption = document.createElement('option');
+                sourceOption.value = table.id;
+                sourceOption.textContent = table.name;
+                sourceTableSelect.appendChild(sourceOption);
+
+                const targetOption = document.createElement('option');
+                targetOption.value = table.id;
+                targetOption.textContent = table.name;
+                targetTableSelect.appendChild(targetOption);
+            });
+        });
+
+        document.getElementById('table-form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const tableName = event.target.table_name.value;
+            const databaseId = event.target.database_id.value;
+
+            const response = await fetch('/sqlite/add_table', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: tableName, database_id: databaseId })
+            });
+
+            const result = await response.json();
+            alert(result.message);
+            event.target.reset();
+        });
+
+        document.getElementById('dependency-form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const sourceTableId = event.target.source_table_id.value;
+            const targetTableId = event.target.target_table_id.value;
+
+            const response = await fetch('/sqlite/add_dependency', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ source_table_id: sourceTableId, target_table_id: targetTableId })
+            });
+
+            const result = await response.json();
+            alert(result.message);
+            event.target.reset();
+        });
+
+        // Load servers when the page loads
+        loadServers();
+    </script>
+</body>
+</html>
