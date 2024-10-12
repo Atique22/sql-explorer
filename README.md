@@ -42,7 +42,6 @@ To set up the project locally, follow these steps:
     pip install -r requirements.txt
 
 ## Running the Application
-    To start the FastAPI application, run:
     ```bash
     uvicorn main:app --reload --port 8000
 
