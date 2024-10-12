@@ -45,3 +45,22 @@ To set up the project locally, follow these steps:
     uvicorn main:app --reload --port 8000
 
 You can access the application in your web browser at http://127.0.0.1:8000. The interactive API documentation can be found at http://127.0.0.1:8000/docs.
+
+## Screenshots
+
+Here are some screenshots of the SQL Explorer application in action:
+
+![Main Page](assets/screenshot1.png)
+*Main page with default SQLite connection and pre-inserted data.*
+
+![Table Overview](assets/screenshot2.png)
+*Overview when selecting a table.*
+
+![Add Database Connection](assets/screenshot3.png)
+*Clicking the button to add a new database connection.*
+
+![Insert Table](assets/screenshot4.png)
+*Feature to insert a new table.*
+
+![Dependency Visualization](assets/screenshot5.png)
+*Visual representation of the data dependencies.*
