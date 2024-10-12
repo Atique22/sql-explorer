@@ -45,7 +45,29 @@ def init_sqlite_db(database_url: str):
 
 init_sqlite_db(SQLALCHEMY_DATABASE_URL)
 # Insert sample data
+def insert_dependency_data(dependency):
+    db = SessionLocal()
+    # Check if the dependency already exists
+    result = db.execute(
+        text("SELECT COUNT(*) FROM dependencies WHERE source_table_id = :source_id AND target_table_id = :target_id"),
+        {"source_id": dependency.source_table_id, "target_id": dependency.target_table_id}
+    ).fetchone()
+    
+    if result[0] > 0:  # If count is greater than 0, the dependency already exists
+        return {"message": "the dependency already exists"}
+    
+    # Insert the new dependency
+    db.execute(
+        text("INSERT INTO dependencies (source_table_id, target_table_id) VALUES (:source_id, :target_id)"),
+        {"source_id": dependency.source_table_id, "target_id": dependency.target_table_id}
+    )
+    
+    # Commit the transaction
+    db.commit()
+    
+    return {"message": "Dependency added successfully."}
 
+    
 def insert_table_data(table: Table):
     db = SessionLocal()
     # Check if the table already exists

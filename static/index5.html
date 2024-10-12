@@ -7,39 +7,51 @@
     <link href="https://unpkg.com/vis-network/styles/vis-network.css" rel="stylesheet" type="text/css" />
     <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    
+
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 20px;
-            background-color: #f9f9f9;
+            background-color: #f4f6f9;
+            color: #333;
         }
         
         h1 {
             text-align: center;
-            color: #333;
+            color: #007bff;
+            margin-bottom: 20px;
         }
 
         #controls {
             margin-bottom: 20px;
             display: flex;
             justify-content: center;
+            gap: 15px;
         }
 
         #controls select,
         #controls input,
         #controls button {
-            margin: 0 10px;
             padding: 10px;
             border-radius: 5px;
             border: 1px solid #ccc;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        #controls select:focus,
+        #controls input:focus,
+        #controls button:focus {
+            border-color: #007bff;
+            outline: none;
         }
 
         #container {
             display: flex;
             justify-content: space-between;
             margin-bottom: 20px;
+            gap: 20px;
         }
 
         #dependency-graph-1,
@@ -48,8 +60,9 @@
             height: 600px;
             border: 1px solid #ddd;
             background-color: #fff;
+            border-radius: 5px;
             padding: 10px;
-            margin: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         #info {
@@ -60,6 +73,7 @@
             border-radius: 5px;
             overflow-y: auto;
             max-height: 600px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         #info h2 {
@@ -67,28 +81,53 @@
             color: #555;
         }
 
-        .table-item {
-            padding: 5px 10px;
+        .table-item,
+        .dependency-link {
+            padding: 10px;
             margin: 5px 0;
             border-radius: 4px;
-            background-color: #e2e2e2;
+            background-color: #e9ecef;
             cursor: pointer;
             transition: background-color 0.3s;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
-        .table-item:hover {
-            background-color: #d4d4d4;
+        .table-item:hover,
+        .dependency-link:hover {
+            background-color: #d3d3d3;
         }
 
         .dependency-link {
-            padding: 5px 10px;
-            margin: 5px 0;
-            border-radius: 4px;
             background-color: #d9edf7;
         }
 
         .dependency-link:hover {
             background-color: #c5e0eb;
+        }
+
+        form {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        form h2 {
+            margin: 0 0 10px;
+            color: #007bff;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
         }
 
     </style>
@@ -97,6 +136,33 @@
 
     <h1>Database Dependency Visualizer</h1>
 
+    <h2>Add New Database and Table</h2>
+    <form id="table-form">
+        <select name="server_id" id="server-select" required>
+            <option value="">Select Server</option>
+            <!-- Options will be populated by JavaScript -->
+        </select>
+        <select name="database_id" id="database-select" required>
+            <option value="">Select Database</option>
+            <!-- Options will be populated by JavaScript -->
+        </select>
+        <input type="text" name="table_name" placeholder="Table Name" required>
+        <button type="submit" class="btn-primary">Add Table</button>
+    </form>
+
+    <h2>Add Dependency</h2>
+    <form id="dependency-form">
+        <select name="source_table_id" id="source-table-select" required>
+            <option value="">Select Source Table</option>
+            <!-- Options will be populated by JavaScript -->
+        </select>
+        <select name="target_table_id" id="target-table-select" required>
+            <option value="">Select Target Table</option>
+            <!-- Options will be populated by JavaScript -->
+        </select>
+        <button type="submit" class="btn-primary">Add Dependency</button>
+    </form>
+
     <div id="controls">
         <select id="database-select">
             <option value="sqlite">SQLite</option>
@@ -104,7 +170,7 @@
         </select>
         
         <input type="text" id="search" placeholder="Search...">
-        <button onclick="searchObjects()">Search</button>
+        <button class="btn-primary" onclick="searchObjects()">Search</button>
     </div>
 
     <div id="container">
@@ -208,41 +274,29 @@
 
         function renderTables(tables) {
             const tablesList = document.getElementById('tables-list');
-            tablesList.innerHTML = '';
-
+            tablesList.innerHTML = ''; // Clear previous content
             tables.forEach(table => {
                 const tableItem = document.createElement('div');
                 tableItem.className = 'table-item';
-                tableItem.textContent = table.name;
-                tableItem.onclick = () => highlightDependencies(table.id);
+                tableItem.innerText = table.name;
                 tablesList.appendChild(tableItem);
             });
         }
-    
+
         function renderDependencies(tables, dependencies) {
             const dependenciesList = document.getElementById('dependencies-list');
-            dependenciesList.innerHTML = '';
-
-            dependencies.forEach(link => {
-                const source = tables.find(t => t.id === link.source_table_id);
-                const target = tables.find(t => t.id === link.target_table_id);
-                
-                if (source && target) {
-                    const dependencyLink = document.createElement('div');
-                    dependencyLink.className = 'dependency-link';
-                    dependencyLink.textContent = `${source.name} → ${target.name}`;
-                    dependenciesList.appendChild(dependencyLink);
-                }
+            dependenciesList.innerHTML = ''; // Clear previous content
+            dependencies.forEach(dep => {
+                const depItem = document.createElement('div');
+                depItem.className = 'dependency-link';
+                depItem.innerText = `${dep.source_table_id} → ${dep.target_table_id}`;
+                dependenciesList.appendChild(depItem);
             });
         }
-    
-        function highlightDependencies(tableId) {
-            const container = document.getElementById('dependency-graph-2');
-            container.innerHTML = `Displaying dependencies for table ID: ${tableId}`;
-        }
 
-        drawDependencies(); // Initial load of dependencies
-        fetchData(); // Initial fetch for the second graph
+        // Initial data fetch and graph drawing
+        fetchData();
+        drawDependencies();
     </script>
 </body>
 </html>
