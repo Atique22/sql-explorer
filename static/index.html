@@ -263,7 +263,14 @@
     
         function highlightDependencies(tableId) {
             const container = document.getElementById('dependency-graph-2');
-            container.innerHTML = `Displaying dependencies for table ID: ${tableId}`;
+            container.innerHTML = `
+                <h2>Overview</h2>
+                <p>You are currently viewing the dependencies for:</p>
+                <strong>Table ID: ${tableId}</strong>
+                <p>This information is visually represented in the graph on the left, illustrating how 
+                this table interacts with others in the database.</p>
+                <p>Use the controls above to navigate through related tables and their dependencies.</p>
+            `;
         }
 
         drawDependencies(); // Initial load of dependencies
