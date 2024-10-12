@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Dependency Visualizer</title>
+    <link href="https://unpkg.com/vis-network/styles/vis-network.css" rel="stylesheet" type="text/css" />
+    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        #controls {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        #controls select,
+        #controls input,
+        #controls button {
+            margin: 0 10px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        #container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        #dependency-graph-1,
+        #dependency-graph-2 {
+            flex: 1;
+            height: 600px;
+            border: 1px solid #ddd;
+            background-color: #fff;
+            padding: 10px;
+            margin: 10px;
+        }
+
+        #info {
+            flex-basis: 30%;
+            padding: 10px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow-y: auto;
+            max-height: 600px;
+        }
+
+        #info h2 {
+            margin-top: 0;
+            color: #555;
+        }
+
+        .table-item {
+            padding: 5px 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            background-color: #e2e2e2;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .table-item:hover {
+            background-color: #d4d4d4;
+        }
+
+        .dependency-link {
+            padding: 5px 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            background-color: #d9edf7;
+        }
+
+        .dependency-link:hover {
+            background-color: #c5e0eb;
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>Database Dependency Visualizer</h1>
+
+    <div id="controls">
+        <select id="database-select">
+            <option value="sqlite">SQLite</option>
+            <option value="mongodb">MongoDB</option>
+        </select>
+        
+        <input type="text" id="search" placeholder="Search...">
+        <button onclick="searchObjects()">Search</button>
+    </div>
+
+    <div id="container">
+        <div id="dependency-graph-1"></div>
+        <div id="dependency-graph-2"></div>
+        <div id="info">
+            <h2>Tables</h2>
+            <div id="tables-list"></div>
+            <h2>Dependencies</h2>
+            <div id="dependencies-list"></div>
+        </div>
+    </div>
+
+    <script>
+        let selectedDatabase = "sqlite";
+
+        document.getElementById('database-select').addEventListener('change', function() {
+            selectedDatabase = this.value;
+            drawDependencies(); // Redraw dependencies on database change
+            fetchData(); // Fetch data for the second graph
+        });
+
+        async function searchObjects() {
+            const query = document.getElementById('search').value;
+            const response = await fetch(`/${selectedDatabase}/search?query=${query}`);
+            const data = await response.json();
+            document.getElementById('tables-list').innerText = JSON.stringify(data.results, null, 2);
+        }
+
+        async function drawDependencies() {
+            try {
+                const response = await fetch(`/${selectedDatabase}/dependencies`);
+                const data = await response.json();
+                
+                // Map nodes for the first graph
+                const nodes = data.nodes.map(node => ({ id: node.id, label: node.name }));
+                const links = data.links.map(link => ({ from: link.source_table_id, to: link.target_table_id }));
+
+                // Create a Set of node IDs that are referenced in the links
+                const linkedNodeIds = new Set();
+                links.forEach(link => {
+                    linkedNodeIds.add(link.from);
+                    linkedNodeIds.add(link.to);
+                });
+
+                // Filter nodes to only include those with dependencies
+                const filteredNodes = nodes.filter(node => linkedNodeIds.has(node.id));
+
+                // Render the first graph with filtered nodes and links
+                renderGraph(filteredNodes, links, 'dependency-graph-1');
+
+            } catch (error) {
+                console.error('Error fetching or processing dependencies:', error);
+            }
+        }
+        
+        async function fetchData() {
+            try {
+                const response = await fetch(`/${selectedDatabase}/dependencies`);
+                const responseData = await response.json();
+                
+                const tables = responseData.nodes;
+                const dependencies = responseData.links;
+                
+                // Render the fetched data for the second graph
+                renderTables(tables);
+                renderDependencies(tables, dependencies);
+                
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                document.getElementById('tables-list').innerHTML = 'Error loading tables.';
+                document.getElementById('dependencies-list').innerHTML = 'Error loading dependencies.';
+            }
+        }
+    
+        function renderGraph(nodes, links, graphId) {
+            const container = document.getElementById(graphId);
+            container.innerHTML = ''; // Clear previous content
+            
+            // Create a network
+            const networkData = {
+                nodes: new vis.DataSet(nodes),
+                edges: new vis.DataSet(links)
+            };
+
+            const options = {
+                physics: {
+                    enabled: true
+                },
+                layout: {
+                    hierarchical: {
+                        direction: "UD", // Up-Down layout
+                        sortMethod: "directed" // Directed sort method
+                    }
+                }
+            };
+
+            // Create the network
+            const network = new vis.Network(container, networkData, options);
+        }
+
+        function renderTables(tables) {
+            const tablesList = document.getElementById('tables-list');
+            tablesList.innerHTML = '';
+
+            tables.forEach(table => {
+                const tableItem = document.createElement('div');
+                tableItem.className = 'table-item';
+                tableItem.textContent = table.name;
+                tableItem.onclick = () => highlightDependencies(table.id);
+                tablesList.appendChild(tableItem);
+            });
+        }
+    
+        function renderDependencies(tables, dependencies) {
+            const dependenciesList = document.getElementById('dependencies-list');
+            dependenciesList.innerHTML = '';
+
+            dependencies.forEach(link => {
+                const source = tables.find(t => t.id === link.source_table_id);
+                const target = tables.find(t => t.id === link.target_table_id);
+                
+                if (source && target) {
+                    const dependencyLink = document.createElement('div');
+                    dependencyLink.className = 'dependency-link';
+                    dependencyLink.textContent = `${source.name} → ${target.name}`;
+                    dependenciesList.appendChild(dependencyLink);
+                }
+            });
+        }
+    
+        function highlightDependencies(tableId) {
+            const container = document.getElementById('dependency-graph-2');
+            container.innerHTML = `Displaying dependencies for table ID: ${tableId}`;
+        }
+
+        drawDependencies(); // Initial load of dependencies
+        fetchData(); // Initial fetch for the second graph
+    </script>
+</body>
+</html>
