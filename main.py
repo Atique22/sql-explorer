@@ -6,8 +6,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import text 
 import asyncio
-from database.sqlite_models import insert_sample_sqlite_data, insert_table_data
-from database.sqlite_models import SessionLocal, Table, Database
+from database.sqlite_models import insert_sample_sqlite_data, insert_table_data, insert_dependency_data
+from database.pydantic_models import TableCreate, DependencyCreate
 
 app = FastAPI()
 
@@ -58,7 +58,7 @@ async def get_databases(server_id: int):
     return [{"id": db.id, "name": db.name} for db in databases]
 
 @app.post("/sqlite/add_table")
-async def add_table(table: Table):
+async def add_table(table: TableCreate):
     return insert_table_data(table) 
     
 @app.get("/sqlite/get_tables/{database_id}")
@@ -66,6 +66,10 @@ async def get_tables(database_id: int):
     db = SessionLocal()
     tables = db.execute(text("SELECT id, name FROM tables WHERE database_id = :database_id"), {"database_id": database_id}).fetchall()
     return [{"id": table.id, "name": table.name} for table in tables]
+
+@app.post("/sqlite/add_dependency")
+async def add_dependency(dependency: DependencyCreate):
+    return  insert_dependency_data(dependency)
 
 @app.get("/sqlite/dependencies")
 def get_dependencies():
