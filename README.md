@@ -42,7 +42,6 @@ To set up the project locally, follow these steps:
     pip install -r requirements.txt
 
 ## Running the Application
-    ```bash
     uvicorn main:app --reload --port 8000
 
 You can access the application in your web browser at http://127.0.0.1:8000. The interactive API documentation can be found at http://127.0.0.1:8000/docs.
