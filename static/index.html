@@ -263,8 +263,47 @@
     
         function highlightDependencies(tableId) {
             const container = document.getElementById('dependency-graph-2');
-            container.innerHTML = `Displaying dependencies for table ID: ${tableId}`;
+            container.innerHTML = `
+                <h2>Overview</h2>
+                <p>You are currently viewing the dependencies for:</p>
+                <strong>Table ID: ${tableId}</strong>
+                <p>This information is visually represented in the graph on the left, illustrating how 
+                this table interacts with others in the database.</p>
+                <p>Use the controls above to navigate through related tables and their dependencies.</p>
+            `;
         }
+
+        // Function to set default content in the dependency graph divs
+        function setDefaultGraphContent() {
+            const graph1 = document.getElementById('dependency-graph-1');
+            const graph2 = document.getElementById('dependency-graph-2');
+
+            // Set default content for dependency-graph-1 if empty
+            if (!graph1.innerHTML.trim()) {
+                graph1.innerHTML = `
+                      <h2>Welcome to the SQL Explorer</h2>
+                    <p>Select a server from the dropdown to start exploring your databases.</p>
+                    <p>Once you select a database, you will see the available tables and their dependencies.</p>
+                    <p>This area will display detailed information about your selections.</p>
+                `;
+            }
+
+            // Set default content for dependency-graph-2 if empty
+            if (!graph2.innerHTML.trim()) {
+                graph2.innerHTML = `    
+                <h2>Welcome to the Tables Overview</h2>
+                <p>In this section, you can explore the various tables available in the selected database.</p>
+                <p>Each table will be displayed with its corresponding dependencies, allowing you to understand 
+                how data is interconnected.</p>
+                <p>To begin, select a database from the dropdown menu, and the tables will populate here, 
+                showcasing their relationships within the database.</p>
+                 `;
+            }
+        }
+
+        // Call the function when the page loads
+        window.onload = setDefaultGraphContent;
+
 
         drawDependencies(); // Initial load of dependencies
         fetchData(); // Initial fetch for the second graph
