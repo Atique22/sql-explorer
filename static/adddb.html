@@ -50,6 +50,10 @@
 <body>
     <div class="container">
         <button class="back-button" onclick="location.href='/static/index.html'">Back to Dashboard</button>
+        <select id="database-select-main">
+            <option value="sqlite">SQLite</option>
+            <option value="mongodb">MongoDB</option>
+        </select>
         <h1>Add New Table</h1>
         <form id="table-form">
             <select name="server_id" id="server-select" required>
@@ -79,10 +83,21 @@
     </div>
 
     <script>
+        let selectedDatabase = "sqlite";
+        // Function to update and log the selected database
+        function updateSelectedDatabase(value) {
+            selectedDatabase = value; // Update the global variable
+            console.log("Selected Database:", selectedDatabase); // Log the current selected database
+        }
+        document.getElementById('database-select-main').addEventListener('change', function() {
+            updateSelectedDatabase(this.value); 
+            console.log(selectedDatabase)
+        })
+        console.log(selectedDatabase)
         // Fetch servers and populate server select
         async function loadServers() {
             try {
-                const response = await fetch('/sqlite/get_servers');
+                const response = await fetch(`/${selectedDatabase}/get_servers`);
                 if (!response.ok) throw new Error('Failed to fetch servers');
                 const servers = await response.json();
                 const serverSelect = document.getElementById('server-select');
@@ -100,7 +115,7 @@
         // Fetch databases based on selected server and populate database select
         document.getElementById('server-select').addEventListener('change', async (event) => {
             const serverId = event.target.value;
-            const response = await fetch(`/sqlite/get_databases/${serverId}`);
+            const response = await fetch(`/${selectedDatabase}/get_databases/${serverId}`);
             if (!response.ok) {
                 alert('Failed to fetch databases');
                 return;
@@ -120,7 +135,7 @@
         // Fetch tables for dependencies when a database is selected
         document.getElementById('database-select').addEventListener('change', async (event) => {
             const databaseId = event.target.value;
-            const response = await fetch(`/sqlite/get_tables/${databaseId}`);
+            const response = await fetch(`/${selectedDatabase}/get_tables/${databaseId}`);
             if (!response.ok) {
                 alert('Failed to fetch tables');
                 return;
@@ -152,7 +167,7 @@
             const tableName = event.target.table_name.value;
             const databaseId = event.target.database_id.value;
 
-            const response = await fetch('/sqlite/add_table', {
+            const response = await fetch(`/${selectedDatabase}/add_table`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name: tableName, database_id: databaseId })
@@ -168,7 +183,7 @@
             const sourceTableId = event.target.source_table_id.value;
             const targetTableId = event.target.target_table_id.value;
 
-            const response = await fetch('/sqlite/add_dependency', {
+            const response = await fetch(`/${selectedDatabase}/add_dependency`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ source_table_id: sourceTableId, target_table_id: targetTableId })

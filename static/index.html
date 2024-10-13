@@ -164,19 +164,30 @@
                 const response = await fetch(`/${selectedDatabase}/dependencies`);
                 const data = await response.json();
                 
+                
                 // Map nodes for the first graph
-                const nodes = data.nodes.map(node => ({ id: node.id, label: node.name }));
+                //const nodes = data.nodes.map(node => ({ id: node.id, label: node.name }));
+                // Map nodes for the first graph with sequential integer IDs
+                const nodes = data.nodes.map((node, index) => ({
+                    id: index + 1, // Assign sequential IDs starting from 1
+                    originalId: node.id, // Keep the original ID for reference
+                    label: node.name,
+                }));
                 const links = data.links.map(link => ({ from: link.source_table_id, to: link.target_table_id }));
-
+                
                 // Create a Set of node IDs that are referenced in the links
                 const linkedNodeIds = new Set();
                 links.forEach(link => {
                     linkedNodeIds.add(link.from);
                     linkedNodeIds.add(link.to);
                 });
+                
+
+                // Convert linkedNodeIds to an array of numbers
+                const linkedNodeIdsNumbers = Array.from(linkedNodeIds).map(id => Number(id));
 
                 // Filter nodes to only include those with dependencies
-                const filteredNodes = nodes.filter(node => linkedNodeIds.has(node.id));
+                const filteredNodes = nodes.filter(node => linkedNodeIdsNumbers.includes(node.id));
 
                 // Render the first graph with filtered nodes and links
                 renderGraph(filteredNodes, links, 'dependency-graph-1');
@@ -234,8 +245,9 @@
         function renderTables(tables) {
             const tablesList = document.getElementById('tables-list');
             tablesList.innerHTML = '';
-
+           
             tables.forEach(table => {
+
                 const tableItem = document.createElement('div');
                 tableItem.className = 'table-item';
                 tableItem.textContent = table.name;
@@ -256,6 +268,12 @@
                     const dependencyLink = document.createElement('div');
                     dependencyLink.className = 'dependency-link';
                     dependencyLink.textContent = `${source.name} → ${target.name}`;
+                    dependenciesList.appendChild(dependencyLink);
+                }
+                else{
+                    const dependencyLink = document.createElement('div');
+                    dependencyLink.className = 'dependency-link';
+                    dependencyLink.textContent = `${link.source_table_id} → ${link.target_table_id}`;
                     dependenciesList.appendChild(dependencyLink);
                 }
             });
