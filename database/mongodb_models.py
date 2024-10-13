@@ -42,12 +42,12 @@ def insert_sample_mongodb_data():
     servers = ['Server1', 'Server2']
     databases = [('Database1', 1), ('Database2', 1), ('Database3', 2)]
     tables = [
-        {'name': 'users', 'database_id': 1},
-        {'name': 'orders', 'database_id': 1},
-        {'name': 'products', 'database_id': 2},
-        {'name': 'customers', 'database_id': 2},
-        {'name': 'transactions', 'database_id': 3},
-        {'name': 'inventory', 'database_id': 3}
+        {'name': 'employees', 'database_id': 1},
+        {'name': 'sales', 'database_id': 1},
+        {'name': 'products_catalog', 'database_id': 2},
+        {'name': 'clients', 'database_id': 2},
+        {'name': 'payments', 'database_id': 3},
+        {'name': 'stock', 'database_id': 3}
     ]
     dependencies = [
         {'source_table_id': 1, 'target_table_id': 2},
