@@ -26,9 +26,8 @@ SQL Explorer addresses the challenges faced by DBAs and SQL developers when expl
 
 To set up the project locally, follow these steps:
 
-## Setting Up MongoDB and SQLite
-
-To set up MongoDB, install it from the [official site](https://www.mongodb.com/try/download/community) and run `mongod`; SQLite is included with Python, and you can create a new database file by specifying its name in your application.
+   **Setting Up MongoDB and SQLite:**
+   To set up MongoDB, install it from the [official site](https://www.mongodb.com/try/download/community) and run `mongod`; SQLite is included with Python, and you can create a new database file by specifying its name in your application.
 
 
 1. **Clone the repository:**
