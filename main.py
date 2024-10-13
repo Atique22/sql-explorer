@@ -9,6 +9,17 @@ import asyncio
 from database.sqlite_models import insert_sample_sqlite_data, insert_table_data, insert_dependency_data
 from database.pydantic_models import TableCreate, DependencyCreate
 
+from database.mongodb_models import mongo_db 
+from pymongo import MongoClient
+from database.mongodb_models import insert_sample_mongodb_data, insert_table_mongodb_data, insert_dependency_mongodb_data
+
+
+# MongoDB Configuration
+MONGO_DATABASE_URL = "mongodb://localhost:27017"
+client = MongoClient(MONGO_DATABASE_URL)
+mongo_db = client['sql_explorer']
+
+
 app = FastAPI()
 
 # SQLite Configuration
@@ -109,6 +120,103 @@ def search_sqlite_objects(query: str):
     finally:
         db.close()  # Ensure the database session is closed
 
+# @app.on_event("startup")
+# def startup_event():
+#     insert_sample_sqlite_data() 
+
+
+
+
+
+# Endpoint to get all servers
+@app.get("/mongodb/get_servers")
+async def get_servers():
+    servers = list(mongo_db.servers.find({}, {"_id": 0, "id": 1, "name": 1}))
+    return servers
+
+# Endpoint to get all databases
+@app.get("/mongodb/get_databases")
+async def get_databases():
+    databases = list(mongo_db.databases.find({}, {"_id": 0, "id": 1, "name": 1}))
+    return databases
+
+# Endpoint to get all tables
+@app.get("/mongodb/get_tables")
+async def get_tables():
+    tables = list(mongo_db.tables.find({}, {"_id": 0, "id": 1, "name": 1}))
+    return tables
+
+# Endpoint to get all dependencies
+@app.get("/mongodb/get_dependencies")
+async def get_dependencies():
+    dependencies = list(mongo_db.dependencies.find({}, {"_id": 0, "source_table_id": 1, "target_table_id": 1}))
+    return dependencies
+
+@app.get("/mongodb/dependencies")
+async def get_mongodb_dependencies():
+    try:
+        # Fetch dependencies from MongoDB
+        dependencies_collection = mongo_db["dependencies"]
+        dependencies = list(dependencies_collection.find())
+
+        # Fetch tables (nodes) from MongoDB
+        tables_collection = mongo_db["tables"]
+        nodes = list(tables_collection.find())
+
+        # Convert dependencies and nodes to the required format, including stringifying ObjectId
+        dependencies_data = [{"source_table_id": str(dep["source_table_id"]), "target_table_id": str(dep["target_table_id"])} for dep in dependencies]
+        nodes_data = [{"id": str(node["_id"]), "name": node["name"]} for node in nodes]
+
+        return {"nodes": nodes_data, "links": dependencies_data}
+    except Exception as e:
+        return {"error": str(e)}
+
+# Get databases for a specific server
+@app.get("/mongodb/get_databases/{server_id}")
+async def get_databases(server_id: int):
+    databases = list(mongo_db.databases.find({"server_id": server_id}, {"_id": 0, "id": 1, "name": 1}))
+    return databases
+
+# Add a new table
+@app.post("/mongodb/add_table")
+async def add_table(table: TableCreate):
+    return insert_table_mongodb_data(table)
+
+# Get tables for a specific database
+@app.get("/mongodb/get_tables/{database_id}")
+async def get_tables(database_id: int):
+    tables = list(mongo_db.tables.find({"database_id": database_id}, {"_id": 0, "id": 1, "name": 1}))
+    return tables
+
+# Add a new dependency
+@app.post("/mongodb/add_dependency")
+async def add_dependency(dependency: DependencyCreate):
+    return insert_dependency_mongodb_data
+    
+# Search for MongoDB objects
+@app.get("/mongodb/search")
+async def search_mongodb(query: str = None):
+    try:
+        if not query:
+            # Return all tables if no query is provided
+            results = mongo_db["tables"].find()
+        else:
+            # Perform search query on MongoDB if query is provided
+            results = mongo_db["tables"].find({"name": {"$regex": query, "$options": "i"}})
+
+        # Convert MongoDB ObjectId to string for JSON serialization
+        search_results = []
+        for result in results:
+            result["_id"] = str(result["_id"])  # Convert ObjectId to string
+            search_results.append(result)
+
+        return {"results": search_results}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+
 @app.on_event("startup")
 def startup_event():
+    insert_sample_mongodb_data()
     insert_sample_sqlite_data() 
