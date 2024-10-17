@@ -12,12 +12,12 @@ __pycache__/
 *.db-journal
 sql_explorer.db  # Specifically ignore this file
 
-# Ignore MongoDB related dump files (if any)
+# Ignore MongoDB related dump files 
 dump/
 
 # Ignore specific database or cache folders
 /db/
 /cache/
 
-# Ignore environment files (optional)
+# Ignore environment files 
 .env
