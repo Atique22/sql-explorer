@@ -53,9 +53,75 @@ You can access the application in your web browser at http://127.0.0.1:8000. The
 
 Here are some screenshots of the SQL Explorer application in action:
 
+```mermaid
+graph TD
+    A[User Interface] --> B[SQL Explorer Tool]
+    B --> C[Database Connection]
+    B --> D[Search Functionality]
+    B --> E[Object Discovery]
+    B --> F[Dependency Visualization]
+    
+    C --> G[Supported Databases]
+    D --> H[Cross-Estate Search]
+    E --> I[Servers/Databases/Tables]
+    F --> J[Relation Diagrams]
+    
+    G --> K[SQLite]
+    G --> L[MongoDB]
+    
+    D --> M[Filtering Options]
+
 ![Main Page](assets/screenshot10.png)
 *SQL Explorer system architecture diagram*
 
+graph TD
+    A[Client] -->|HTTP Requests| B[FastAPI Application]
+    
+    B --> C{Database Type}
+    C -->|SQLite| D[SQLite Database]
+    C -->|MongoDB| E[MongoDB Database]
+    
+    subgraph "FastAPI Endpoints"
+    B --> F[Get Servers]
+    B --> G[Get Databases]
+    B --> H[Get Tables]
+    B --> I[Get Dependencies]
+    B --> J[Add Table]
+    B --> K[Add Dependency]
+    B --> L[Search]
+    end
+    
+    subgraph "Database Models"
+    M[SQLite Models]
+    N[MongoDB Models]
+    O[Pydantic Models]
+    end
+    
+    D <--> M
+    E <--> N
+    B <--> O
+    
+    subgraph "Core Functionality"
+    P[Database Connection]
+    Q[Object Discovery]
+    R[Dependency Visualization]
+    S[Search and Filtering]
+    end
+    
+    B --> P
+    B --> Q
+    B --> R
+    B --> S
+    
+    P --> D & E
+    Q --> D & E
+    R --> I
+    S --> L
+    
+    T[Static Files] --> B
+    
+    B -->|HTTP Responses| A
+    
 ![Table Overview](assets/screenshot9.png)
 *Detailed database relationship and functionality flow diagram.*
 
