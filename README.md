@@ -71,9 +71,11 @@ graph TD
     
     D --> M[Filtering Options]
 
+```markdown
 ![Main Page](assets/screenshot10.png)
 *SQL Explorer system architecture diagram*
 
+```mermaid
 graph TD
     A[Client] -->|HTTP Requests| B[FastAPI Application]
     
@@ -121,7 +123,8 @@ graph TD
     T[Static Files] --> B
     
     B -->|HTTP Responses| A
-    
+
+```markdown   
 ![Table Overview](assets/screenshot9.png)
 *Detailed database relationship and functionality flow diagram.*
 
