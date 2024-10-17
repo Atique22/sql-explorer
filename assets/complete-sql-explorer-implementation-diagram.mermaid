@@ -1,0 +1,47 @@
+graph TD
+    A[Client] -->|HTTP Requests| B[FastAPI Application]
+    
+    B --> C{Database Type}
+    C -->|SQLite| D[SQLite Database]
+    C -->|MongoDB| E[MongoDB Database]
+    
+    subgraph "FastAPI Endpoints"
+    B --> F[Get Servers]
+    B --> G[Get Databases]
+    B --> H[Get Tables]
+    B --> I[Get Dependencies]
+    B --> J[Add Table]
+    B --> K[Add Dependency]
+    B --> L[Search]
+    end
+    
+    subgraph "Database Models"
+    M[SQLite Models]
+    N[MongoDB Models]
+    O[Pydantic Models]
+    end
+    
+    D <--> M
+    E <--> N
+    B <--> O
+    
+    subgraph "Core Functionality"
+    P[Database Connection]
+    Q[Object Discovery]
+    R[Dependency Visualization]
+    S[Search and Filtering]
+    end
+    
+    B --> P
+    B --> Q
+    B --> R
+    B --> S
+    
+    P --> D & E
+    Q --> D & E
+    R --> I
+    S --> L
+    
+    T[Static Files] --> B
+    
+    B -->|HTTP Responses| A

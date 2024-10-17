@@ -6,7 +6,6 @@ SQL Explorer is a prototype application designed for Database Administrators (DB
 
 - [Introduction](#introduction)
 - [Features](#features)
-- [Project Structure](#project-structure)
 - [Installation](#installation)
 - [Running the Application](#running-the-application)
 
@@ -32,7 +31,6 @@ To set up the project locally, follow these steps:
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/Atique22/sql-explore.git
    cd sql-explorer
 
 2. **Create a virtual environment:**
@@ -54,6 +52,12 @@ You can access the application in your web browser at http://127.0.0.1:8000. The
 ## Screenshots
 
 Here are some screenshots of the SQL Explorer application in action:
+
+![Main Page](assets/screenshot10.png)
+*SQL Explorer system architecture diagram*
+
+![Table Overview](assets/screenshot9.png)
+*Detailed database relationship and functionality flow diagram.*
 
 ![Main Page](assets/screenshot1.png)
 *Main page with default SQLite connection and pre-inserted data.*
