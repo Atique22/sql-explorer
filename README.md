@@ -81,6 +81,3 @@ Here are some screenshots of the SQL Explorer application in action:
 ![Dependency Visualization](assets/screenshot7.png)
 *Visual representation of the data dependencies filter search (mongodb).*
 
-
-![Dependency Visualization](assets/screenshot8.png)
-*Visual representation of the data (mongodb).*
